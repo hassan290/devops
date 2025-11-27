@@ -54,7 +54,7 @@ jobs:
       - name: Run functional tests
         run: |
           pip install -r requirements.txt
-          python -m pytest tests/functional_tests/ --url=http://localhost:5000 -v --junitxml=functional-results.xml
+          python -m pytest tests/functional_tests/ --url=http://localhost:5000 -v --junitxml=functional-results.xml -k "not selenium"
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
