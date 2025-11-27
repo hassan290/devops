@@ -1,0 +1,66 @@
+stages:
+  - test
+  - build
+  - deploy
+
+variables:
+    IMAGE_NAME: web_calculator
+    IMAGE_TAG: 0.0.$CI_PIPELINE_IID
+
+
+pytest:
+  stage: test
+  image: python:3.10
+  script:
+    - pip install -r requirements.txt
+    - pytest --junitxml=junit.xml tests/unit_tests
+  artifacts:
+    reports:
+      junit: junit.xml
+
+.docker-registry-auth:
+    before_script:
+        - mkdir -p /kaniko/.docker
+        - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+
+.build-docker-kaniko:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [ "" ]
+  extends: .docker-registry-auth
+  script:
+    - >-
+      /kaniko/executor
+      --context "${CONTEXT_PATH}"
+      --dockerfile "${DOCKERFILE_PATH}"
+      --cache-copy-layers
+      --destination "${CI_REGISTRY_IMAGE}/$IMAGE_NAME:$IMAGE_TAG"
+      --cache=true
+
+build-docker:
+  extends: .build-docker-kaniko
+  variables:
+    DOCKERFILE_PATH: Dockerfile
+    CONTEXT_PATH: ${CI_PROJECT_DIR}
+  
+.ssh-connection-from-docker: 
+    before_script:
+        - apk add openssh-client bash
+        - eval $(ssh-agent -s)
+        - mkdir -p ~/.ssh
+        - ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ''
+        - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+        - chmod 700 ~/.ssh
+
+deploy-app:
+  stage: deploy
+  image: docker:24.0.7-dind-alpine3.18
+  extends: .ssh-connection-from-docker 
+  environment:
+    name: staging
+    url: $APP_URL
+  script: 
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker context create docker_lab --docker "$DEPLOY_URL"
+    - docker --context docker_lab run -d -p 5000:5000 --name web_calc ${CI_REGISTRY_IMAGE}/$IMAGE_NAME:$IMAGE_TAG
