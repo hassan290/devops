@@ -1,12 +1,12 @@
 name: CI Pipeline
-
 on: [push]
-
 env:
   IMAGE_TAG: web-calculator:${{ github.sha }}
   APP_START_TIMEOUT: 60
-
 jobs:
+  # -------------
+  # Build
+  # -------------
   build:
     runs-on: ubuntu-latest
     outputs:
@@ -16,6 +16,9 @@ jobs:
       - name: Build Docker image
         run: docker build -t $IMAGE_TAG .
 
+  # -------------
+  # Unit tests
+  # -------------
   unit_tests:
     runs-on: ubuntu-latest
     steps:
@@ -30,6 +33,9 @@ jobs:
           name: unit-test-results
           path: unit-results.xml
 
+  # -------------
+  # Functional tests
+  # -------------
   functional_tests:
     runs-on: ubuntu-latest
     needs: build
@@ -62,6 +68,9 @@ jobs:
       - name: Cleanup
         run: docker rm -f app || true
 
+  # -------------
+  # Curl tests
+  # -------------
   curl_tests:
     runs-on: ubuntu-latest
     needs: build
@@ -85,7 +94,7 @@ jobs:
             curl -f "http://localhost:5000/subtract/10&4" && echo "✅ Subtract OK"
             curl -f "http://localhost:5000/divide/20&5" && echo "✅ Divide OK"
             echo "=========================="
-            echo "All curl tests passed!"
+            echo "🎉 All curl tests passed!"
           } > curl-report.txt
       - name: Upload results
         uses: actions/upload-artifact@v4
@@ -95,6 +104,9 @@ jobs:
       - name: Cleanup
         run: docker rm -f app || true
 
+  # -------------
+  # Postman tests (Conditional)
+  # -------------
   postman_tests:
     runs-on: ubuntu-latest
     needs: build
@@ -109,6 +121,7 @@ jobs:
           else
             echo "Postman collection not found, skipping..."
             echo "run_postman=false" >> $GITHUB_OUTPUT
+          fi
       - name: Build and start application
         if: steps.check_postman.outputs.run_postman == 'true'
         run: |
@@ -141,6 +154,9 @@ jobs:
         if: steps.check_postman.outputs.run_postman == 'true'
         run: docker rm -f app || true
 
+  # -------------
+  # Selenium tests (Conditional)
+  # -------------
   selenium_tests:
     runs-on: ubuntu-latest
     needs: build
@@ -155,6 +171,7 @@ jobs:
           else
             echo "Selenium tests not found, skipping..."
             echo "run_selenium=false" >> $GITHUB_OUTPUT
+          fi
       - name: Build and start application
         if: steps.check_selenium.outputs.run_selenium == 'true'
         run: |
@@ -186,6 +203,9 @@ jobs:
         if: steps.check_selenium.outputs.run_selenium == 'true'
         run: docker rm -f app selenium || true
 
+  # -------------
+  # Package release
+  # -------------
   package_release:
     runs-on: ubuntu-latest
     needs: [unit_tests, functional_tests, curl_tests, postman_tests, selenium_tests]
@@ -200,6 +220,9 @@ jobs:
           name: web-calculator-release
           path: web-calculator-release.zip
 
+  # -------------
+  # CD - Deploy via SSH
+  # -------------
   deploy:
     runs-on: ubuntu-latest
     needs: [package_release]
