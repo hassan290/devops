@@ -1,17 +1,17 @@
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 import pytest
 import os
-
-from selenium.webdriver.common.by import By
-
-chrome_driver = "C:/Users/IIoT_Lab/PycharmProjects/flaskProject/tests/functional_tests/yandexdriver.exe" if "ChromeWebDriver" not in os.environ.keys() else os.path.join(
-    os.environ["ChromeWebDriver"], 'chromedriver.exe')
-
 
 class TestBackend:
 
     def setup(self):
-        self.driver = webdriver.Chrome(chrome_driver)
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        self.driver = webdriver.Chrome(options=chrome_options)
 
     def test_add(self, url):
         self.driver.get(f'{url}/add/1&2')
