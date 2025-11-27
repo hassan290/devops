@@ -236,8 +236,8 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           port: 22
-          timeout: 30
-          command_timeout: 30
+          timeout: 59s
+          command_timeout: 30s
           debug: true
           script: |
             echo "Checking connection..."
