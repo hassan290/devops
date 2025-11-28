@@ -86,15 +86,15 @@ jobs:
       - name: Run curl tests
         run: |
           {
-            echo "🧪 Running curl tests..."
+            echo "Running curl tests..."
             echo "=========================="
-            curl -f http://localhost:5000/ && echo "✅ Root OK"
-            curl -f "http://localhost:5000/add/2&3" && echo "✅ Add OK"
-            curl -f "http://localhost:5000/multiply/3&4" && echo "✅ Multiply OK"
-            curl -f "http://localhost:5000/subtract/10&4" && echo "✅ Subtract OK"
-            curl -f "http://localhost:5000/divide/20&5" && echo "✅ Divide OK"
+            curl -f http://localhost:5000/ && echo "Root OK"
+            curl -f "http://localhost:5000/add/2&3" && echo "Add OK"
+            curl -f "http://localhost:5000/multiply/3&4" && echo "Multiply OK"
+            curl -f "http://localhost:5000/subtract/10&4" && echo "Subtract OK"
+            curl -f "http://localhost:5000/divide/20&5" && echo "Divide OK"
             echo "=========================="
-            echo "🎉 All curl tests passed!"
+            echo "All curl tests passed!"
           } > curl-report.txt
       - name: Upload results
         uses: actions/upload-artifact@v4
