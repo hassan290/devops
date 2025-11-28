@@ -7,22 +7,22 @@ ACTIVE_FILE="$ROOT_DIR/.active_color"
 
 log() { echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')] $*"; }
 
-echo "=== 🏥 System Health Check ==="
-echo ""
+echo "System Health Check"
+echo "-------------------------"
 
 # Show active color
 if [ -f "$ACTIVE_FILE" ]; then
-  echo "🎯 Active Color: $(cat "$ACTIVE_FILE")"
+  echo "Active Color: $(cat "$ACTIVE_FILE")"
 else
-  echo "🎯 Active Color: unknown"
+  echo "Active Color: unknown"
 fi
 echo ""
 
-echo "=== 📊 Services Status ==="
+echo "=== Services Status ==="
 docker compose ps
 
 echo ""
-echo "=== 🔍 Detailed Health Status ==="
+echo "=== Detailed Health Status ==="
 
 for svc in app_blue app_green nginx; do
   cid=$(docker compose ps -q $svc 2>/dev/null || true)
@@ -30,30 +30,30 @@ for svc in app_blue app_green nginx; do
     state=$(docker inspect --format='{{.State.Status}}' "$cid" 2>/dev/null || echo "unknown")
     health=$(docker inspect --format='{{.State.Health.Status}}' "$cid" 2>/dev/null || echo "no health")
     
-    echo "📍 $svc:"
+    echo "	 $svc:"
     echo "   State: $state"
     echo "   Health: $health"
     
     if [[ $svc == app_* ]]; then
       echo -n "   Endpoint Test: "
       if docker exec "$cid" curl -f -s http://localhost:5000/health > /dev/null 2>&1; then
-        echo "✅ OK"
+        echo "OK"
       else
-        echo "❌ FAIL"
+        echo "FAIL"
       fi
     fi
   else
-    echo "📍 $svc: ❌ NOT RUNNING"
+    echo "$svc: NOT RUNNING"
   fi
   echo ""
 done
 
-echo "=== 🌐 Nginx Routing Test ==="
+echo "=== Nginx Routing Test ==="
 if curl -f -s http://localhost/health > /dev/null; then
-  echo "✅ Nginx Routing: HEALTHY"
+  echo "Nginx Routing: HEALTHY"
 else
-  echo "❌ Nginx Routing: UNHEALTHY"
+  echo "Nginx Routing: UNHEALTHY"
 fi
 
 echo ""
-echo "=== ✅ Health Check Complete ==="
+echo "=== Health Check Complete ==="

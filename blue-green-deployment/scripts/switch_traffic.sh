@@ -16,32 +16,32 @@ if [ "$CURRENT" = "blue" ]; then
     NEW_CONTAINER="app_green"
     NEW_SERVER="app_green:5000"
     BACKUP_SERVER="app_blue:5000"
-    log "🔄 Switching from BLUE to GREEN"
+    log "Switching from BLUE to GREEN"
 else
     NEW="blue"
     NEW_CONTAINER="app_blue"
     NEW_SERVER="app_blue:5000"
     BACKUP_SERVER="app_green:5000"
-    log "🔄 Switching from GREEN to BLUE"
+    log "Switching from GREEN to BLUE"
 fi
 
 # Wait for the new server to be healthy
-log "⏳ Waiting for $NEW server to be healthy..."
+log "Waiting for $NEW server to be healthy..."
 MAX_ATTEMPTS=30
 attempt=1
 until [ "$(docker inspect --format='{{.State.Health.Status}}' ${NEW_CONTAINER})" = "healthy" ]; do
     if [ $attempt -gt $MAX_ATTEMPTS ]; then
-        log "❌ $NEW failed to become healthy. Aborting switch."
+        log "$NEW failed to become healthy. Aborting switch."
         exit 1
     fi
     log "Attempt $attempt/$MAX_ATTEMPTS - $NEW status: $(docker inspect --format='{{.State.Health.Status}}' ${NEW_CONTAINER})"
     sleep 5
     ((attempt++))
 done
-log "✅ $NEW is healthy!"
+log "$NEW is healthy!"
 
 # Update nginx config
-log "📝 Updating nginx configuration..."
+log "Updating nginx configuration..."
 cat > "$NGINX_CONF" << EOF
 upstream webcalc_upstream {
     server $NEW_SERVER max_fails=1 fail_timeout=5s;
@@ -67,10 +67,10 @@ server {
 EOF
 
 # Reload nginx
-log "🔄 Reloading nginx..."
+log "Reloading nginx..."
 docker compose exec nginx nginx -s reload
 
 # Update active color
 echo "$NEW" > "$ACTIVE_FILE"
 
-log "✅ Traffic switched to $NEW successfully!"
+log "Traffic switched to $NEW successfully!"

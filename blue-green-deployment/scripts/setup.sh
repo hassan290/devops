@@ -7,7 +7,7 @@ ROOT_DIR="$(cd "$BASE_DIR/.." && pwd)"
 
 log() { echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')] $*"; }
 
-log "🔧 Setting up Blue-Green Deployment..."
+log "Setting up Blue-Green Deployment..."
 
 # Make all scripts executable
 chmod +x "$BASE_DIR"/*.sh
@@ -19,8 +19,8 @@ echo "blue" > "$ROOT_DIR/.active_color"
 mkdir -p "$ROOT_DIR/nginx/conf.d"
 
 # Start initial deployment
-log "🚀 Starting initial deployment with blue..."
+log "Starting initial deployment with blue..."
 "$BASE_DIR/deploy.sh" blue
 
-log "✅ Setup completed successfully!"
-log "🎯 Run './scripts/health_check.sh' to verify the deployment"
+log "Setup completed successfully!"
+log "Run './scripts/health_check.sh' to verify the deployment"

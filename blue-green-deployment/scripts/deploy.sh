@@ -40,12 +40,12 @@ TARGET_SERVICE=$([ "$TARGET_COLOR" = "blue" ] && echo "$BLUE_SERVICE" || echo "$
 TARGET_UPSTREAM=$([ "$TARGET_COLOR" = "blue" ] && echo "$UPSTREAM_BLUE" || echo "$UPSTREAM_GREEN")
 OTHER_SERVICE=$([ "$TARGET_COLOR" = "blue" ] && echo "$GREEN_SERVICE" || echo "$BLUE_SERVICE")
 
-log "🚀 Starting deployment: $TARGET_COLOR (service: $TARGET_SERVICE)"
+log "Starting deployment: $TARGET_COLOR (service: $TARGET_SERVICE)"
 
 # Record previous color for rollback
 if [ -f "$ACTIVE_FILE" ]; then
     cp "$ACTIVE_FILE" "$PREV_FILE"
-    log "📝 Previous color saved: $(cat "$PREV_FILE")"
+    log "Previous color saved: $(cat "$PREV_FILE")"
 fi
 
 # 1) Pull new image
@@ -53,16 +53,16 @@ log "⬇️  Pulling image for $TARGET_SERVICE..."
 $COMPOSE_CMD pull "$TARGET_SERVICE"
 
 # 2) Start target service
-log "🔨 Starting $TARGET_SERVICE..."
+log "Starting $TARGET_SERVICE..."
 $COMPOSE_CMD up -d --no-deps "$TARGET_SERVICE"
 
 # 3) Health check with detailed logging
-log "🏥 Waiting up to ${HEALTH_TIMEOUT}s for health check..."
+log "Waiting up to ${HEALTH_TIMEOUT}s for health check..."
 elapsed=0
 CID=$($COMPOSE_CMD ps -q "$TARGET_SERVICE")
 
 if [ -z "$CID" ]; then
-  log "❌ Could not find container for $TARGET_SERVICE"
+  log "Could not find container for $TARGET_SERVICE"
   exit 3
 fi
 
@@ -71,13 +71,13 @@ while true; do
   log "Health status: $status (elapsed: ${elapsed}s)"
   
   if [ "$status" = "healthy" ]; then
-    log "✅ $TARGET_SERVICE is healthy!"
+    log "$TARGET_SERVICE is healthy!"
     break
   fi
   
   if [ "$elapsed" -ge "$HEALTH_TIMEOUT" ]; then
-    log "❌ Health check timeout after ${elapsed}s"
-    log "🔄 Performing rollback: stopping $TARGET_SERVICE"
+    log "Health check timeout after ${elapsed}s"
+    log "Performing rollback: stopping $TARGET_SERVICE"
     $COMPOSE_CMD stop "$TARGET_SERVICE" || true
     exit 4
   fi
@@ -87,9 +87,9 @@ while true; do
 done
 
 # 4) Atomic switch of nginx config
-log "🔄 Switching nginx upstream to $TARGET_COLOR..."
+log "Switching nginx upstream to $TARGET_COLOR..."
 if [ ! -f "$TARGET_UPSTREAM" ]; then
-  log "❌ Upstream template not found: $TARGET_UPSTREAM"
+  log "Upstream template not found: $TARGET_UPSTREAM"
   exit 5
 fi
 
@@ -104,19 +104,19 @@ cp "$TARGET_UPSTREAM" "$tmpfile"
 mv "$tmpfile" "$UPSTREAM_ACTIVE"
 
 # 5) Reload nginx
-log "🔄 Reloading nginx..."
+log "Reloading nginx..."
 $COMPOSE_CMD exec -T "$NGINX_SERVICE" nginx -s reload
 
 # 6) Update active color
 echo "$TARGET_COLOR" > "$ACTIVE_FILE"
 
 # 7) Stop old service (optional - comment if you want both running)
-log "🛑 Stopping previous service: $OTHER_SERVICE"
+log "Stopping previous service: $OTHER_SERVICE"
 $COMPOSE_CMD stop "$OTHER_SERVICE" 2>/dev/null || true
 
 # 8) Cleanup
-log "🧹 Cleaning up old containers..."
+log "Cleaning up old containers..."
 docker system prune -f --filter "until=24h" 2>/dev/null || true
 
-log "🎉 Deployment completed successfully! Active color: $TARGET_COLOR"
-log "🌐 Application URL: http://localhost:${NGINX_PORT:-80}"
+log "Deployment completed successfully! Active color: $TARGET_COLOR"
+log "Application URL: http://localhost:${NGINX_PORT:-80}"

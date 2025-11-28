@@ -18,7 +18,7 @@ log "🔄 Starting rollback process..."
 
 if [ -f "$PREV_FILE" ]; then
   PREV=$(cat "$PREV_FILE")
-  log "📝 Found previous active color: $PREV"
+  log "Found previous active color: $PREV"
   
   if [ "$PREV" = "blue" ]; then
     SRC="$UPSTREAM_BLUE"
@@ -27,7 +27,7 @@ if [ -f "$PREV_FILE" ]; then
   fi
   
   if [ ! -f "$SRC" ]; then
-    log "❌ Upstream template not found: $SRC"
+    log "Upstream template not found: $SRC"
     exit 1
   fi
   
@@ -48,12 +48,12 @@ if [ -f "$PREV_FILE" ]; then
   # Update active color
   echo "$PREV" > "$ACTIVE_FILE"
   
-  log "✅ Rollback complete! Active color: $PREV"
-  log "🌐 Application URL: http://localhost:${NGINX_PORT:-80}"
+  log "Rollback complete! Active color: $PREV"
+  log "Application URL: http://localhost:${NGINX_PORT:-80}"
   
 else
-  log "❌ No previous active color recorded (.active_color.previous not found)"
-  log "💡 Unable to perform automatic rollback."
-  log "💡 You can manually run: ./scripts/switch_traffic.sh"
+  log "No previous active color recorded (.active_color.previous not found)"
+  log "Unable to perform automatic rollback."
+  log "You can manually run: ./scripts/switch_traffic.sh"
   exit 1
 fi
